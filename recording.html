@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Melody Play – Demo (No Audio)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- TailwindCSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    html, body {
+      height: 100%;
+      background: radial-gradient(1200px 800px at 20% -10%, #3b82f6 0%, #1e1b4b 35%, #0b1026 100%);
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+    }
+    /* Custom scrollbar for better UX */
+    .nice-scroll::-webkit-scrollbar { height: 10px; width: 10px; }
+    .nice-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.06); border-radius: 8px; }
+    .nice-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 8px; }
+    .nice-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+
+    /* Canvas crispness */
+    canvas { image-rendering: -webkit-optimize-contrast; }
+
+    /* Drag ghost cursor for better feedback */
+    .drag-ghost { pointer-events: none; position: fixed; z-index: 9999; opacity: .85; transform: translate(-50%, -50%); }
+
+    /* Tooltip */
+    .tooltip { position: relative; }
+    .tooltip:hover::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(20,22,50,0.95);
+      color: #fff;
+      padding: 6px 10px;
+      font-size: 12px;
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+  </style>
+</head>
+<body class="text-white">
+  <!-- Top Banner: Demo Disclosure -->
+  <div class="w-full bg-amber-500/10 border-b border-amber-400/20 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center justify-center h-6 w-6 rounded bg-amber-400/20 text-amber-300">⚠️</span>
+        <p class="text-sm text-amber-200">
+          Demo: Audio recording/playback, instrument sound conversion, and MP3/WAV export aren’t available here.
+        </p>
+      </div>
+      <button id="helpBtn" class="text-sm text-amber-100 hover:text-white transition">
+        Help & Shortcuts
+      </button>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="max-w-7xl mx-auto px-4 mt-4">
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="flex items-center gap-3">
+        <!-- Simple logo -->
+        <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-400 to-fuchsia-500 flex items-center justify-center shadow-lg">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" class="drop-shadow">
+            <path d="M9 5v10.5a2.5 2.5 0 1 1-1-2V4.5h9V14a2.5 2.5 0 1 1-1-2V5H9z" fill="white" opacity=".95"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-2xl font-extrabold tracking-tight">Melody Play</h1>
+          <p class="text-xs text-white/60 -mt-0.5">Layered waveforms, editing, and simulated recording — no audio in this demo</p>
+        </div>
+      </div>
+      <!-- Transport -->
+      <div class="flex-1"></div>
+      <div class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-2 py-1.5 shadow-lg">
+        <button id="playBtn" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30 transition">Play</button>
+        <button id="stopBtn" class="px-3 py-1.5 rounded-lg bg-rose-500/20 text-rose-200 hover:bg-rose-500/30 transition">Stop</button>
+        <button id="loopBtn" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 transition">Loop</button>
+        <div class="h-6 w-px bg-white/10 mx-1"></div>
+        <label class="flex items-center gap-2 text-sm text-white/70 px-2">
+          Tempo
+          <input id="tempoInput" type="range" min="60" max="180" value="100" class="accent-indigo-400">
+          <span id="tempoLabel" class="w-10 text-right">100</span>
+          <span class="text-white/40 text-xs">BPM</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Actions bar -->
+    <div class="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-3">
+      <div class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl p-2 shadow-lg overflow-x-auto nice-scroll">
+        <button id="addTrackBtn" class="px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-200 hover:bg-indigo-500/30 transition">
+          + Add Track
+        </button>
+        <button id="recordBtn" class="px-3 py-1.5 rounded-lg bg-fuchsia-500/20 text-fuchsia-200 hover:bg-fuchsia-500/30 transition tooltip" data-tip="Simulated only — no mic">
+          ● Record (Demo)
+        </button>
+        <button id="convertBtn" class="px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-200 hover:bg-cyan-500/30 transition tooltip" data-tip="Visual effect only">
+          ✨ Convert Melody (Demo)
+        </button>
+        <div class="h-6 w-px bg-white/10 mx-1"></div>
+        <button id="cutBtn" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 transition">Cut</button>
+        <button id="copyBtn" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 transition">Copy</button>
+        <button id="pasteBtn" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 transition">Paste</button>
+        <button id="deleteBtn" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 transition">Delete</button>
+      </div>
+
+      <div class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl p-2 shadow-lg overflow-x-auto nice-scroll">
+        <label class="flex items-center gap-2 text-sm text-white/70 px-2">
+          Zoom
+          <input id="zoomInput" type="range" min="0.5" max="3" step="0.1" value="1" class="accent-fuchsia-400">
+          <span id="zoomLabel" class="w-10 text-right">1.0x</span>
+        </label>
+        <label class="flex items-center gap-2 text-sm text-white/70 px-2">
+          Length
+          <select id="lengthSelect" class="bg-white/10 rounded-lg px-3 py-1.5">
+            <option value="8">8s</option>
+            <option value="16" selected>16s</option>
+            <option value="32">32s</option>
+            <option value="60">60s</option>
+          </select>
+        </label>
+        <div class="ml-auto text-sm text-white/60" id="cursorLabel">Cursor: 0.00s</div>
+      </div>
+
+      <div class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl p-2 shadow-lg overflow-x-auto nice-scroll">
+        <button id="exportJsonBtn" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30 transition">
+          ⬇ Export Project (.json)
+        </button>
+        <label for="importJsonInput" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 transition cursor-pointer">
+          ⬆ Import Project
+        </label>
+        <input id="importJsonInput" type="file" accept=".json,application/json" class="hidden" />
+        <button id="exportPngBtn" class="px-3 py-1.5 rounded-lg bg-sky-500/20 text-sky-200 hover:bg-sky-500/30 transition">
+          🖼 Export Snapshot (PNG)
+        </button>
+        <button id="exportAudioBtn" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 transition tooltip" data-tip="Not available in this demo">
+          🎧 Export Mix (WAV/MP3)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Editor Area -->
+  <main class="max-w-7xl mx-auto px-4 mt-4">
+    <div class="bg-white/5 border border-white/10 rounded-2xl overflow-hidden shadow-2xl backdrop-blur">
+      <!-- Ruler -->
+      <div class="relative w-full border-b border-white/10 bg-gradient-to-r from-white/5 to-white/0">
+        <canvas id="ruler" class="w-full h-12 block"></canvas>
+        <div id="playhead" class="absolute top-0 bottom-0 w-0.5 bg-fuchsia-400/90 shadow-[0_0_10px_rgba(217,70,239,0.7)]" style="left: 0;"></div>
+      </div>
+
+      <!-- Tracks container -->
+      <div id="tracksContainer" class="relative overflow-auto nice-scroll" style="max-height: 58vh;">
+        <!-- Tracks dynamically injected here -->
+      </div>
+    </div>
+  </main>
+
+  <!-- Toasts -->
+  <div id="toastStack" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+  <!-- Modals -->
+  <div id="modalBackdrop" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm items-center justify-center p-4">
+    <div id="modalCard" class="w-full max-w-lg bg-slate-900 border border-white/10 rounded-2xl p-6 relative">
+      <button id="modalClose" class="absolute top-3 right-3 text-white/60 hover:text-white">✕</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script>
+    // Melody Play – Demo
+    // This demo focuses on visuals and editing interactions without audio capture/playback.
+    // All features are frontend-only and self-contained.
+
+    // --------------------------
+    // Global State
+    // --------------------------
+    const state = {
+      sampleRate: 220,            // Visual sample density (points per second)
+      duration: 16,               // seconds
+      zoom: 1,                    // zoom multiplier (affects canvas width)
+      bpm: 100,                   // affects playhead speed
+      playing: false,
+      loopEnabled: false,
+      loopStart: 0,
+      loopEnd: null,              // null means end of project
+      playheadSec: 0,
+      selection: null,            // { trackId, startSec, endSec }
+      caretSec: 0,
+      clipboard: null,            // { data: Float32Array, lengthSec }
+      tracks: [],                 // { id, name, color, instrument, mute, solo, data: Float32Array }
+      dragReorder: { draggingId: null, overId: null },
+      recording: { active: false, trackId: null, timer: null }, // demo recording
+      lastDrawWidth: 0,
+    };
+
+    // Colors and instruments
+    const COLORS = [
+      '#60a5fa','#a78bfa','#f472b6','#34d399','#22d3ee','#facc15','#fb7185','#f59e0b'
+    ];
+    const INSTRUMENTS = ['Piano','Flute','Violin','Pluck','Warm Pad'];
+
+    // DOM refs
+    const refs = {
+      tracksContainer: document.getElementById('tracksContainer'),
+      ruler: document.getElementById('ruler'),
+      playhead: document.getElementById('playhead'),
+      playBtn: document.getElementById('playBtn'),
+      stopBtn: document.getElementById('stopBtn'),
+      loopBtn: document.getElementById('loopBtn'),
+      tempoInput: document.getElementById('tempoInput'),
+      tempoLabel: document.getElementById('tempoLabel'),
+      zoomInput: document.getElementById('zoomInput'),
+      zoomLabel: document.getElementById('zoomLabel'),
+      lengthSelect: document.getElementById('lengthSelect'),
+      addTrackBtn: document.getElementById('addTrackBtn'),
+      recordBtn: document.getElementById('recordBtn'),
+      convertBtn: document.getElementById('convertBtn'),
+      cutBtn: document.getElementById('cutBtn'),
+      copyBtn: document.getElementById('copyBtn'),
+      pasteBtn: document.getElementById('pasteBtn'),
+      deleteBtn: document.getElementById('deleteBtn'),
+      exportJsonBtn: document.getElementById('exportJsonBtn'),
+      importJsonInput: document.getElementById('importJsonInput'),
+      exportPngBtn: document.getElementById('exportPngBtn'),
+      exportAudioBtn: document.getElementById('exportAudioBtn'),
+      cursorLabel: document.getElementById('cursorLabel'),
+      toastStack: document.getElementById('toastStack'),
+      modalBackdrop: document.getElementById('modalBackdrop'),
+      modalCard: document.getElementById('modalCard'),
+      modalContent: document.getElementById('modalContent'),
+      modalClose: document.getElementById('modalClose'),
+      helpBtn: document.getElementById('helpBtn'),
+    };
+
+    // --------------------------
+    // Utilities
+    // --------------------------
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    const secToIdx = (sec) => Math.round(sec * state.sampleRate);
+    const idxToSec = (idx) => idx / state.sampleRate;
+
+    // Create a new empty Float32Array for a full track length
+    const emptyData = () => new Float32Array(secToIdx(state.duration)).fill(0);
+
+    // Generate a short melodic pattern for visuals
+    function generateMelody(seconds, colorSeed = 0) {
+      const length = secToIdx(seconds);
+      const arr = new Float32Array(length);
+      // Simple step melody across a pentatonic scale, shaped with envelopes
+      const scale = [0,2,4,7,9]; // semitones
+      const baseFreq = 220 + (colorSeed % 5) * 20;
+      for (let i = 0; i < length; i++) {
+        const t = i / state.sampleRate;
+        const step = Math.floor((t * 2 + colorSeed) % scale.length);
+        const freq = baseFreq * Math.pow(2, scale[step]/12);
+        const env = Math.exp(-3 * ((i% (state.sampleRate*0.5)) / (state.sampleRate*0.5))); // small decays
+        const v = Math.sin(2*Math.PI*freq*t) * 0.6 * env;
+        // slight chorus
+        const v2 = Math.sin(2*Math.PI*(freq*1.01)*t + 0.3) * 0.2 * env;
+        arr[i] = v + v2;
+      }
+      // Normalize softly
+      const max = Math.max(0.01, Math.max(...arr.map(Math.abs)));
+      for (let i=0;i<length;i++) arr[i] = arr[i]/(max*1.3);
+      return arr;
+    }
+
+    // Toast
+    function toast(msg, tone='info', timeout=2000) {
+      const base = document.createElement('div');
+      base.className = 'px-4 py-2 rounded-xl shadow-xl text-sm flex items-center gap-2 border ' +
+        (tone==='warn' ? 'bg-amber-500/15 border-amber-400/30 text-amber-100' :
+         tone==='good' ? 'bg-emerald-500/15 border-emerald-400/30 text-emerald-100' :
+         'bg-white/10 border-white/15 text-white');
+      base.textContent = msg;
+      refs.toastStack.appendChild(base);
+      setTimeout(()=> {
+        base.style.transition = 'opacity .3s, transform .3s';
+        base.style.opacity = '0';
+        base.style.transform = 'translateY(6px)';
+        setTimeout(()=> base.remove(), 300);
+      }, timeout);
+    }
+
+    // Modal
+    function openModal(html) {
+      refs.modalContent.innerHTML = html;
+      refs.modalBackdrop.classList.remove('hidden');
+      refs.modalBackdrop.classList.add('flex');
+    }
+    function closeModal() {
+      refs.modalBackdrop.classList.add('hidden');
+      refs.modalBackdrop.classList.remove('flex');
+      refs.modalContent.innerHTML = '';
+    }
+
+    // --------------------------
+    // Tracks and Rendering
+    // --------------------------
+    function createTrack(name, color, instrument='Piano', data=null) {
+      return {
+        id: crypto.randomUUID(),
+        name,
+        color,
+        instrument,
+        mute: false,
+        solo: false,
+        data: data ?? emptyData(),
+      };
+    }
+
+    function addInitialTracks() {
+      if (state.tracks.length) return;
+      state.tracks.push(createTrack('Melody', COLORS[0], 'Piano', generateMelody(state.duration*0.8, 0)));
+      state.tracks.push(createTrack('Harmony', COLORS[1], 'Warm Pad', generateMelody(state.duration*0.6, 1)));
+      state.tracks.push(createTrack('Bass', COLORS[2], 'Pluck', generateMelody(state.duration*0.5, 2)));
+    }
+
+    function buildTrackRow(track, index) {
+      const row = document.createElement('div');
+      row.className = 'grid grid-cols-[260px_1fr] border-b border-white/10';
+      row.dataset.id = track.id;
+
+      // Left: header
+      const header = document.createElement('div');
+      header.className = 'flex items-center gap-2 px-3 py-3 bg-white/5 border-r border-white/10 backdrop-blur relative';
+      header.draggable = true;
+
+      const colorDot = document.createElement('div');
+      colorDot.className = 'h-3.5 w-3.5 rounded-full ring-2 ring-white/20';
+      colorDot.style.background = track.color;
+
+      const name = document.createElement('input');
+      name.value = track.name;
+      name.className = 'bg-transparent font-semibold focus:outline-none focus:ring-2 focus:ring-white/20 rounded px-1';
+      name.size = Math.max(6, track.name.length);
+      name.addEventListener('input', () => {
+        track.name = name.value;
+        name.size = Math.max(6, name.value.length);
+        persist();
+      });
+
+      const moveHandle = document.createElement('span');
+      moveHandle.textContent = '⠿';
+      moveHandle.className = 'ml-1 text-white/40 cursor-grab select-none';
+
+      const muteBtn = document.createElement('button');
+      muteBtn.textContent = track.mute ? 'M' : 'M';
+      muteBtn.title = 'Mute';
+      muteBtn.className = 'ml-auto px-2 py-1 rounded bg-white/10 hover:bg-white/15 ' + (track.mute?'opacity-100 text-amber-200':'text-white/80');
+      muteBtn.addEventListener('click', () => {
+        track.mute = !track.mute;
+        toast(track.mute? 'Track muted' : 'Track unmuted');
+        renderTracks();
+        persist();
+      });
+
+      const soloBtn = document.createElement('button');
+      soloBtn.textContent = 'S';
+      soloBtn.title = 'Solo';
+      soloBtn.className = 'px-2 py-1 rounded bg-white/10 hover:bg-white/15 ' + (track.solo?'opacity-100 text-emerald-200':'text-white/80');
+      soloBtn.addEventListener('click', () => {
+        track.solo = !track.solo;
+        toast(track.solo? 'Track soloed' : 'Solo off');
+        renderTracks();
+        persist();
+      });
+
+      const instSel = document.createElement('select');
+      instSel.className = 'ml-2 bg-white/10 rounded px-2 py-1 text-sm';
+      INSTRUMENTS.forEach(ins => {
+        const opt = document.createElement('option');
+        opt.value = ins; opt.textContent = ins;
+        if (ins === track.instrument) opt.selected = true;
+        instSel.appendChild(opt);
+      });
+      instSel.addEventListener('change', () => { track.instrument = instSel.value; persist(); });
+
+      const delBtn = document.createElement('button');
+      delBtn.textContent = '✕';
+      delBtn.title = 'Delete track';
+      delBtn.className = 'ml-2 px-2 py-1 rounded bg-rose-500/10 text-rose-200 hover:bg-rose-500/20';
+      delBtn.addEventListener('click', () => {
+        const idx = state.tracks.findIndex(t => t.id === track.id);
+        state.tracks.splice(idx,1);
+        if (state.selection?.trackId === track.id) state.selection = null;
+        renderTracks(); persist();
+      });
+
+      header.append(moveHandle, colorDot, name, instSel, muteBtn, soloBtn, delBtn);
+
+      // Reorder: drag and drop
+      header.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', track.id);
+        header.classList.add('opacity-70');
+      });
+      header.addEventListener('dragend', () => header.classList.remove('opacity-70'));
+      row.addEventListener('dragover', (e) => e.preventDefault());
+      row.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const fromId = e.dataTransfer.getData('text/plain');
+        if (!fromId || fromId === track.id) return;
+        const fromIndex = state.tracks.findIndex(t=>t.id===fromId);
+        const toIndex = state.tracks.findIndex(t=>t.id===track.id);
+        const [moved] = state.tracks.splice(fromIndex,1);
+        state.tracks.splice(toIndex,0,moved);
+        renderTracks(); persist();
+      });
+
+      // Right: canvas area
+      const panel = document.createElement('div');
+      panel.className = 'relative bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))]';
+
+      const canvas = document.createElement('canvas');
+      canvas.className = 'block w-[2000px] h-20';
+      panel.appendChild(canvas);
+
+      // Selection overlay
+      const selDiv = document.createElement('div');
+      selDiv.className = 'absolute top-0 bottom-0 bg-fuchsia-500/20 border-x border-fuchsia-400/50 pointer-events-none hidden';
+      panel.appendChild(selDiv);
+
+      // Click-capture layer for caret feedback
+      const caretLine = document.createElement('div');
+      caretLine.className = 'absolute top-0 bottom-0 w-0.5 bg-white/30 pointer-events-none hidden';
+      panel.appendChild(caretLine);
+
+      // Mouse interactions: selection and caret
+      let isSelecting = false;
+      let selStartX = 0;
+      const getCanvasMetrics = () => {
+        const rect = panel.getBoundingClientRect();
+        const widthPx = Math.round(rect.width * state.zoom);
+        return { rect, widthPx };
+      };
+
+      function secsToX(sec) {
+        const { widthPx } = getCanvasMetrics();
+        return (sec / state.duration) * widthPx;
+      }
+      function xToSecs(x) {
+        const { widthPx } = getCanvasMetrics();
+        return clamp((x / widthPx) * state.duration, 0, state.duration);
+      }
+
+      panel.addEventListener('mousedown', (e) => {
+        const x = e.offsetX;
+        isSelecting = true;
+        selStartX = x;
+        selDiv.style.left = `${x}px`;
+        selDiv.style.width = '0px';
+        selDiv.classList.remove('hidden');
+      });
+      panel.addEventListener('mousemove', (e) => {
+        if (!isSelecting) return;
+        const x = e.offsetX;
+        const left = Math.min(selStartX, x);
+        const right = Math.max(selStartX, x);
+        selDiv.style.left = `${left}px`;
+        selDiv.style.width = `${right - left}px`;
+        const s = xToSecs(left);
+        const eSec = xToSecs(right);
+        state.selection = { trackId: track.id, startSec: s, endSec: eSec };
+        refs.cursorLabel.textContent = `Selection: ${s.toFixed(2)}–${eSec.toFixed(2)}s`;
+      });
+      window.addEventListener('mouseup', () => {
+        if (!isSelecting) return;
+        isSelecting = false;
+        if (!state.selection) selDiv.classList.add('hidden');
+        else {
+          // Set caret to end
+          state.caretSec = state.selection.endSec;
+          caretLine.style.left = `${secsToX(state.caretSec)}px`;
+          caretLine.classList.remove('hidden');
+        }
+        persist();
+      });
+      panel.addEventListener('click', (e) => {
+        // Set caret if not dragging
+        if (isSelecting) return;
+        const x = e.offsetX;
+        const sec = xToSecs(x);
+        state.caretSec = sec;
+        state.selection = null;
+        selDiv.classList.add('hidden');
+        caretLine.style.left = `${secsToX(sec)}px`;
+        caretLine.classList.remove('hidden');
+        refs.cursorLabel.textContent = `Cursor: ${sec.toFixed(2)}s`;
+        persist();
+      });
+
+      row.append(header, panel);
+
+      // Draw waveform
+      function draw() {
+        // Compute canvas pixel size with zoom
+        const w = Math.max(600, Math.round(refs.tracksContainer.clientWidth * state.zoom));
+        const h = 80;
+        canvas.width = w;
+        canvas.height = h;
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+        const ctx = canvas.getContext('2d');
+
+        // Background subtle grid
+        ctx.fillStyle = 'rgba(10,12,30,0.35)';
+        ctx.fillRect(0,0,w,h);
+        for (let i=0; i<=10; i++){
+          const y = (i/10)*h;
+          ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+          ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
+        }
+
+        // Waveform color, dim if muted and not soloed
+        const anySolo = state.tracks.some(t => t.solo);
+        const active = (!anySolo || track.solo) && !track.mute;
+        const alpha = active ? 1 : 0.35;
+
+        // Draw waveform
+        const data = track.data;
+        ctx.save();
+        ctx.translate(0, h/2);
+        ctx.scale(1, -1);
+        ctx.lineWidth = 1.25;
+        ctx.strokeStyle = hexToRgba(track.color, 0.95 * alpha);
+        ctx.beginPath();
+
+        // Step mapping: sample index to X pixel
+        const samples = data.length;
+        for (let x=0; x<w; x++) {
+          const sec = (x / w) * state.duration;
+          const idx = clamp(Math.floor(secToIdx(sec)), 0, samples-1);
+          const v = data[idx];
+          const y = v * (h*0.42);
+          if (x===0) ctx.moveTo(0, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // Fill under waveform
+        const grad = ctx.createLinearGradient(0,0,0,h);
+        grad.addColorStop(0, hexToRgba(track.color, 0.18 * alpha));
+        grad.addColorStop(1, 'rgba(255,255,255,0.01)');
+        ctx.lineTo(w,0);
+        ctx.lineTo(0,0);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        ctx.restore();
+
+        // Refresh selection and caret visuals
+        if (state.selection?.trackId === track.id) {
+          const left = secsToX(state.selection.startSec);
+          const right = secsToX(state.selection.endSec);
+          selDiv.style.left = `${left}px`;
+          selDiv.style.width = `${Math.max(1, right-left)}px`;
+          selDiv.classList.remove('hidden');
+        } else {
+          selDiv.classList.add('hidden');
+        }
+
+        if (state.caretSec != null) {
+          caretLine.style.left = `${secsToX(state.caretSec)}px`;
+        }
+      }
+
+      // Attach draw method to element for later refresh
+      row._draw = draw;
+
+      return row;
+    }
+
+    function renderTracks() {
+      refs.tracksContainer.innerHTML = '';
+      state.tracks.forEach((t, i) => {
+        const row = buildTrackRow(t, i);
+        refs.tracksContainer.appendChild(row);
+      });
+      drawAll();
+      drawRuler();
+    }
+
+    function drawAll() {
+      // Draw every track row canvas
+      Array.from(refs.tracksContainer.children).forEach(child => child._draw && child._draw());
+      updatePlayheadPosition();
+    }
+
+    function drawRuler() {
+      const canvas = refs.ruler;
+      const width = Math.max(600, Math.round(refs.tracksContainer.clientWidth * state.zoom));
+      const height = 48;
+      canvas.width = width; canvas.height = height;
+      canvas.style.width = width + 'px';
+      const ctx = canvas.getContext('2d');
+
+      ctx.clearRect(0,0,width,height);
+      // Background
+      const grad = ctx.createLinearGradient(0,0,0,height);
+      grad.addColorStop(0,'rgba(255,255,255,0.10)');
+      grad.addColorStop(1,'rgba(255,255,255,0.03)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0,0,width,height);
+
+      // Ticks every 0.5s, major every 1s
+      const seconds = state.duration;
+      for (let s=0; s<=seconds; s+=0.5) {
+        const x = (s/seconds)*width;
+        const major = Number.isInteger(s);
+        ctx.strokeStyle = 'rgba(255,255,255,' + (major? '0.35':'0.15') + ')';
+        ctx.beginPath();
+        ctx.moveTo(x, height);
+        ctx.lineTo(x, height - (major? 18:10));
+        ctx.stroke();
+        if (major) {
+          ctx.fillStyle = 'rgba(255,255,255,0.7)';
+          ctx.font = '12px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(s.toFixed(0)+'s', x, 14);
+        }
+      }
+    }
+
+    // --------------------------
+    // Transport and Loop
+    // --------------------------
+    let rafId = null;
+    const bpmToPxPerSec = () => {
+      // Visual play speed scales subtly with tempo
+      return (state.bpm / 120); // 1x at 120 bpm
+    }
+
+    function togglePlay() {
+      if (state.playing) pause();
+      else play();
+    }
+    function play() {
+      state.playing = true;
+      const step = (tPrev) => (tNow) => {
+        if (!state.playing) return;
+        const dt = (tNow - tPrev.t) / 1000; // seconds
+        const speed = bpmToPxPerSec();
+        state.playheadSec += dt * speed;
+        const loopEnd = state.loopEnabled ? (state.loopEnd ?? state.duration) : state.duration;
+        const loopStart = state.loopEnabled ? state.loopStart : 0;
+
+        if (state.playheadSec >= loopEnd) {
+          state.playheadSec = loopStart;
+        }
+        updatePlayheadPosition();
+        rafId = requestAnimationFrame(step({ t: tNow }));
+      };
+      rafId = requestAnimationFrame(step({ t: performance.now() }));
+      refs.playBtn.textContent = 'Pause';
+      toast('Playhead started', 'good', 900);
+    }
+    function pause() {
+      state.playing = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      refs.playBtn.textContent = 'Play';
+      toast('Paused', 'info', 900);
+    }
+    function stop() {
+      state.playing = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      state.playheadSec = 0;
+      updatePlayheadPosition();
+      refs.playBtn.textContent = 'Play';
+      toast('Stopped', 'info', 900);
+    }
+
+    function updatePlayheadPosition() {
+      const width = Math.max(600, Math.round(refs.tracksContainer.clientWidth * state.zoom));
+      const x = (state.playheadSec / state.duration) * width;
+      refs.playhead.style.left = x + 'px';
+    }
+
+    // --------------------------
+    // Editing Operations
+    // --------------------------
+    function getSelectedTrack() {
+      if (!state.selection) return null;
+      return state.tracks.find(t => t.id === state.selection.trackId);
+    }
+
+    function opCut() {
+      const track = getSelectedTrack();
+      if (!track) return toast('Select a region first', 'warn');
+      const sI = secToIdx(state.selection.startSec);
+      const eI = secToIdx(state.selection.endSec);
+      const len = eI - sI;
+      if (len <= 0) return;
+      // Copy
+      state.clipboard = { data: track.data.slice(sI, eI), lengthSec: (eI - sI)/state.sampleRate };
+      // Replace with silence
+      track.data.fill(0, sI, eI);
+      state.selection = null;
+      drawAll(); persist();
+      toast('Cut to clipboard', 'good');
+    }
+
+    function opCopy() {
+      const track = getSelectedTrack();
+      if (!track) return toast('Select a region first', 'warn');
+      const sI = secToIdx(state.selection.startSec);
+      const eI = secToIdx(state.selection.endSec);
+      const len = eI - sI;
+      if (len <= 0) return;
+      state.clipboard = { data: track.data.slice(sI, eI), lengthSec: (eI - sI)/state.sampleRate };
+      toast('Copied section', 'good');
+    }
+
+    function opPaste() {
+      if (!state.clipboard) return toast('Clipboard is empty', 'warn');
+      // Paste into selected track if any, else first track
+      const track = getSelectedTrack() || state.tracks[0];
+      if (!track) return toast('No track to paste into', 'warn');
+
+      const startIdx = secToIdx(state.selection ? state.selection.startSec : state.caretSec);
+      const clip = state.clipboard.data;
+      // Write clip into track data, truncating if needed
+      for (let i=0; i<clip.length; i++) {
+        const idx = startIdx + i;
+        if (idx >= track.data.length) break;
+        track.data[idx] = clip[i];
+      }
+      drawAll(); persist();
+      toast('Pasted', 'good');
+    }
+
+    function opDelete() {
+      const track = getSelectedTrack();
+      if (!track) return toast('Select a region first', 'warn');
+      const sI = secToIdx(state.selection.startSec);
+      const eI = secToIdx(state.selection.endSec);
+      track.data.fill(0, sI, eI);
+      state.selection = null;
+      drawAll(); persist();
+      toast('Deleted section', 'good');
+    }
+
+    function toggleLoop() {
+      if (state.selection) {
+        state.loopEnabled = true;
+        state.loopStart = state.selection.startSec;
+        state.loopEnd = state.selection.endSec;
+        toast(`Looping ${state.loopStart.toFixed(2)}–${state.loopEnd.toFixed(2)}s`, 'good');
+      } else {
+        state.loopEnabled = !state.loopEnabled;
+        toast(state.loopEnabled ? 'Loop on' : 'Loop off', state.loopEnabled? 'good':'info');
+      }
+      refs.loopBtn.classList.toggle('bg-fuchsia-500/20', state.loopEnabled);
+      refs.loopBtn.classList.toggle('text-fuchsia-200', state.loopEnabled);
+      persist();
+    }
+
+    // --------------------------
+    // Demo Recording (Visual only)
+    // --------------------------
+    function startRecordDemo() {
+      // Create a new track to "record" into if none selected
+      let targetTrack = getSelectedTrack();
+      if (!targetTrack) {
+        targetTrack = createTrack('Recording', COLORS[(state.tracks.length)%COLORS.length], 'Violin', emptyData());
+        state.tracks.push(targetTrack);
+        renderTracks();
+      }
+
+      if (state.recording.active) return; // already recording
+
+      state.recording.active = true;
+      state.recording.trackId = targetTrack.id;
+      toast('Recording demo started (no audio)', 'good');
+
+      // Move playhead to start if at end
+      if (state.playheadSec >= state.duration) state.playheadSec = 0;
+      const startTime = performance.now();
+
+      // Simulate waveform growth by writing gently varying values
+      state.recording.timer = setInterval(() => {
+        if (!state.recording.active) return;
+        // Write a small chunk each tick
+        const tNow = performance.now();
+        const elapsedSec = (tNow - startTime)/1000;
+        const writeLen = Math.floor(0.05 * state.sampleRate); // 50ms
+        const startIdx = secToIdx(state.playheadSec);
+        const tr = state.tracks.find(t => t.id === state.recording.trackId);
+        for (let i=0; i<writeLen; i++) {
+          const idx = startIdx + i;
+          if (idx >= tr.data.length) break;
+          const t = idx / state.sampleRate;
+          // Make it look musical-ish with envelopes and harmonics
+          const f = 180 + 40*Math.sin(t*2.1);
+          const v = 0.55*Math.sin(2*Math.PI*f*t) + 0.25*Math.sin(2*Math.PI*(f*2.01)*t+0.2);
+          const env = Math.min(1, elapsedSec*0.6) * Math.exp(-Math.max(0, (t - state.playheadSec))*0.35);
+          tr.data[idx] = clamp(v * 0.8 * env, -1, 1);
+        }
+        // Advance playhead visually
+        state.playheadSec += 0.05;
+        if (state.playheadSec >= state.duration) {
+          stopRecordDemo();
+        }
+        drawAll();
+      }, 50);
+    }
+
+    function stopRecordDemo() {
+      if (!state.recording.active) return;
+      clearInterval(state.recording.timer);
+      state.recording.active = false;
+      state.recording.trackId = null;
+      toast('Recording demo stopped');
+      persist();
+    }
+
+    // --------------------------
+    // Melody "Conversion" (Visual only)
+    // --------------------------
+    function convertMelodyDemo() {
+      const track = getSelectedTrack() || state.tracks[0];
+      if (!track) return toast('Add a track first', 'warn');
+
+      const sI = secToIdx(state.selection ? state.selection.startSec : 0);
+      const eI = secToIdx(state.selection ? state.selection.endSec : state.duration);
+      if (eI - sI <= 0) return toast('Select a region to convert', 'warn');
+
+      // Apply simple shaping based on instrument
+      const region = track.data.subarray(sI, eI);
+      switch (track.instrument) {
+        case 'Piano':
+          for (let i=0;i<region.length;i++) {
+            const a = i / region.length;
+            const env = Math.exp(-4*a);
+            region[i] = Math.tanh(region[i]*1.6) * env;
+          }
+          break;
+        case 'Flute':
+          smooth(region, 6);
+          for (let i=0;i<region.length;i++) region[i] *= 0.85;
+          break;
+        case 'Violin':
+          // Add gentle saw-ish overtone
+          for (let i=0;i<region.length;i++) {
+            const y = region[i];
+            region[i] = clamp(y*0.7 + sawify(y)*0.35, -1, 1);
+          }
+          break;
+        case 'Pluck':
+          for (let i=0;i<region.length;i++) {
+            const a = i / region.length;
+            const env = (1 - a) * (1 - a);
+            region[i] = Math.tanh(region[i]*2.1) * env;
+          }
+          break;
+        case 'Warm Pad':
+          smooth(region, 12);
+          break;
+      }
+      drawAll();
+      toast('Converted visually to ' + track.instrument, 'good');
+    }
+
+    function smooth(arr, n=5) {
+      // Moving average smoothing
+      const tmp = new Float32Array(arr.length);
+      for (let i=0;i<arr.length;i++) {
+        let sum = 0, cnt = 0;
+        for (let k=-n;k<=n;k++) {
+          const j = i+k;
+          if (j>=0 && j<arr.length) { sum += arr[j]; cnt++; }
+        }
+        tmp[i] = sum / cnt;
+      }
+      arr.set(tmp);
+    }
+    function sawify(v) {
+      // Simple non-linear shape to mimic saw partials
+      return clamp(2*(v - Math.round(v/2)), -1, 1);
+    }
+
+    // --------------------------
+    // Export/Import
+    // --------------------------
+    function exportJSON() {
+      const project = {
+        meta: { name: 'Melody Play Demo', version: 1, duration: state.duration, sampleRate: state.sampleRate },
+        tracks: state.tracks.map(t => ({
+          id: t.id, name: t.name, color: t.color, instrument: t.instrument, mute: t.mute, solo: t.solo,
+          data: Array.from(t.data)
+        })),
+        selection: state.selection,
+        loop: { enabled: state.loopEnabled, start: state.loopStart, end: state.loopEnd },
+      };
+      const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'melody-play-demo.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('Project exported', 'good');
+    }
+
+    function importJSON(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const project = JSON.parse(reader.result);
+          state.duration = project.meta?.duration ?? state.duration;
+          state.sampleRate = project.meta?.sampleRate ?? state.sampleRate;
+          state.tracks = (project.tracks || []).map(pt => ({
+            id: pt.id || crypto.randomUUID(),
+            name: pt.name || 'Track',
+            color: pt.color || COLORS[0],
+            instrument: pt.instrument || 'Piano',
+            mute: !!pt.mute, solo: !!pt.solo,
+            data: new Float32Array(pt.data || [])
+          }));
+          state.selection = project.selection || null;
+          state.loopEnabled = project.loop?.enabled || false;
+          state.loopStart = project.loop?.start || 0;
+          state.loopEnd = project.loop?.end ?? null;
+          refs.lengthSelect.value = String(state.duration);
+          renderTracks(); persist();
+          toast('Project imported', 'good');
+        } catch (e) {
+          console.error(e);
+          toast('Invalid project file', 'warn');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function exportSnapshotPNG() {
+      // Create a combined canvas snapshot of ruler + tracks
+      const width = Math.max(600, Math.round(refs.tracksContainer.clientWidth * state.zoom));
+      const trackHeights = Array.from(refs.tracksContainer.children).map(ch => 80);
+      const totalHeight = 48 + trackHeights.reduce((a,b)=>a+b,0);
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = totalHeight;
+      const ctx = canvas.getContext('2d');
+
+      // Draw background
+      ctx.fillStyle = '#0b1026';
+      ctx.fillRect(0,0,width,totalHeight);
+
+      // Draw ruler
+      drawRuler(); // ensure up to date
+      ctx.drawImage(refs.ruler, 0, 0);
+
+      // Draw each track canvas snapshot
+      let y = 48;
+      Array.from(refs.tracksContainer.children).forEach(row => {
+        const c = row.querySelector('canvas');
+        ctx.drawImage(c, 0, y);
+        y += 80;
+      });
+
+      // Download
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'melody-play-snapshot.png';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+      toast('Snapshot exported', 'good');
+    }
+
+    // --------------------------
+    // Persistence
+    // --------------------------
+    function persist() {
+      try {
+        const slim = {
+          duration: state.duration,
+          sampleRate: state.sampleRate,
+          zoom: state.zoom,
+          bpm: state.bpm,
+          tracks: state.tracks.map(t => ({
+            id: t.id, name: t.name, color: t.color, instrument: t.instrument, mute: t.mute, solo: t.solo,
+            data: Array.from(t.data.slice(0, Math.min(t.data.length, 2000))) // save small sample for perf
+          }))
+        };
+        localStorage.setItem('melodyPlayDemo', JSON.stringify(slim));
+      } catch (e) {}
+    }
+
+    // --------------------------
+    // Ruler/Canvas helpers
+    // --------------------------
+    function hexToRgba(hex, alpha=1) {
+      const h = hex.replace('#','');
+      const bigint = parseInt(h, 16);
+      const r = (bigint >> 16) & 255;
+      const g = (bigint >> 8) & 255;
+      const b = bigint & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    // --------------------------
+    // UI Event Wiring
+    // --------------------------
+    function wireUI() {
+      refs.playBtn.addEventListener('click', togglePlay);
+      refs.stopBtn.addEventListener('click', stop);
+      refs.loopBtn.addEventListener('click', toggleLoop);
+      refs.tempoInput.addEventListener('input', () => {
+        state.bpm = Number(refs.tempoInput.value);
+        refs.tempoLabel.textContent = String(state.bpm);
+      });
+
+      refs.addTrackBtn.addEventListener('click', () => {
+        const idx = state.tracks.length % COLORS.length;
+        const t = createTrack('Track ' + (state.tracks.length+1), COLORS[idx], INSTRUMENTS[idx%INSTRUMENTS.length], emptyData());
+        // Add a tiny generated segment to see something
+        const seed = Math.floor(Math.random()*5);
+        const melody = generateMelody(Math.min(4, state.duration), seed);
+        t.data.set(melody, 0);
+        state.tracks.push(t);
+        renderTracks(); persist();
+        toast('Track added', 'good');
+      });
+
+      refs.recordBtn.addEventListener('click', () => {
+        if (!state.recording.active) startRecordDemo();
+        else stopRecordDemo();
+        refs.recordBtn.classList.toggle('bg-fuchsia-500/30', state.recording.active);
+      });
+
+      refs.convertBtn.addEventListener('click', () => {
+        convertMelodyDemo();
+      });
+
+      refs.cutBtn.addEventListener('click', opCut);
+      refs.copyBtn.addEventListener('click', opCopy);
+      refs.pasteBtn.addEventListener('click', opPaste);
+      refs.deleteBtn.addEventListener('click', opDelete);
+
+      refs.zoomInput.addEventListener('input', () => {
+        state.zoom = Number(refs.zoomInput.value);
+        refs.zoomLabel.textContent = state.zoom.toFixed(1)+'x';
+        drawRuler(); drawAll();
+      });
+
+      refs.lengthSelect.addEventListener('change', () => {
+        state.duration = Number(refs.lengthSelect.value);
+        // Resize all tracks
+        state.tracks.forEach(t => {
+          const newData = emptyData();
+          const minLen = Math.min(newData.length, t.data.length);
+          newData.set(t.data.slice(0, minLen), 0);
+          t.data = newData;
+        });
+        // Adjust loop if needed
+        state.loopEnd = Math.min(state.loopEnd ?? state.duration, state.duration);
+        state.playheadSec = Math.min(state.playheadSec, state.duration);
+        renderTracks(); persist();
+      });
+
+      refs.exportJsonBtn.addEventListener('click', exportJSON);
+      refs.importJsonInput.addEventListener('change', (e) => {
+        const f = e.target.files?.[0];
+        if (f) importJSON(f);
+        e.target.value = '';
+      });
+      refs.exportPngBtn.addEventListener('click', exportSnapshotPNG);
+      refs.exportAudioBtn.addEventListener('click', () => {
+        openModal(`
+          <div class="space-y-4">
+            <h3 class="text-lg font-semibold">Export Mix (WAV/MP3)</h3>
+            <p class="text-white/70">This demo can’t render or export audio here.</p>
+            <ul class="text-white/60 text-sm list-disc pl-5 space-y-1">
+              <li>Visual edit/export (JSON/PNG) works fully.</li>
+              <li>For real audio: implement Web Audio offline rendering or a backend renderer outside this environment.</li>
+            </ul>
+            <div class="text-right">
+              <button class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15" onclick="document.getElementById('modalBackdrop').classList.add('hidden')">Okay</button>
+            </div>
+          </div>
+        `);
+      });
+
+      refs.modalClose.addEventListener('click', closeModal);
+      refs.modalBackdrop.addEventListener('click', (e) => {
+        if (e.target === refs.modalBackdrop) closeModal();
+      });
+
+      refs.helpBtn.addEventListener('click', () => {
+        openModal(`
+          <div class="space-y-4">
+            <h3 class="text-lg font-semibold">Help & Shortcuts</h3>
+            <div class="text-white/70 text-sm space-y-2">
+              <p>• Click and drag inside a track to select a region. The playhead shows where you are.</p>
+              <p>• Use Cut, Copy, Paste, Delete to edit visually. Toggle Loop to loop the selection.</p>
+              <p>• Add tracks and drag their headers to reorder. Rename tracks inline.</p>
+              <p>• Record (Demo) shows a growing waveform (no audio). Convert Melody (Demo) applies visual timbre.</p>
+              <p>• Export Project (.json) to save your work, Import to load it. Export Snapshot saves a PNG image.</p>
+              <p class="text-amber-200">Note: Audio capture/playback and MP3/WAV export aren’t available in this demo.</p>
+            </div>
+            <div class="rounded-xl border border-white/10 bg-white/5 p-3">
+              <svg viewBox="0 0 600 120" class="w-full h-28">
+                <rect x="0" y="0" width="600" height="120" rx="12" fill="rgba(255,255,255,0.04)" />
+                <rect x="0" y="20" width="600" height="2" fill="rgba(255,255,255,0.2)"/>
+                <!-- Simple visual diagram -->
+                <rect x="50" y="40" width="180" height="30" rx="6" fill="#60a5fa" opacity=".4"/>
+                <rect x="260" y="40" width="140" height="30" rx="6" fill="#a78bfa" opacity=".4"/>
+                <rect x="430" y="40" width="110" height="30" rx="6" fill="#f472b6" opacity=".4"/>
+                <line x1="120" y1="20" x2="120" y2="100" stroke="#e879f9" stroke-width="2"/>
+              </svg>
+            </div>
+            <div class="text-right">
+              <button class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15" onclick="document.getElementById('modalBackdrop').classList.add('hidden')">Close</button>
+            </div>
+          </div>
+        `);
+      });
+
+      // Keyboard shortcuts
+      window.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.isContentEditable) return;
+        if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'x') { e.preventDefault(); opCut(); }
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') { e.preventDefault(); opCopy(); }
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') { e.preventDefault(); opPaste(); }
+        if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); opDelete(); }
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') { e.preventDefault(); toggleLoop(); }
+      });
+
+      // Resize listeners
+      window.addEventListener('resize', () => {
+        drawRuler(); drawAll();
+      });
+    }
+
+    // --------------------------
+    // Init
+    // --------------------------
+    function init() {
+      addInitialTracks();
+      wireUI();
+      renderTracks();
+      drawRuler();
+      refs.loopBtn.classList.toggle('bg-fuchsia-500/20', state.loopEnabled);
+      refs.loopBtn.classList.toggle('text-fuchsia-200', state.loopEnabled);
+      refs.zoomLabel.textContent = state.zoom.toFixed(1)+'x';
+      refs.tempoLabel.textContent = String(state.bpm);
+      toast('Welcome to Melody Play (Demo)', 'info', 1200);
+    }
+
+    // Start
+    init();
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9829f93bf4b4c0d8',t:'MTc1ODQ2MjAxOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

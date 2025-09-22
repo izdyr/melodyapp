@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MelodyPlay — Home</title>
+  <meta name="description" content="MelodyPlay — A clean and minimal home page for a web-based music game." />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* Tailwind config extension (optional, for subtle transitions) */
+    /* Custom keyframes for soft entrance/exit */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes scaleIn {
+      from { opacity: 0; transform: translateY(6px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(4px); }
+    }
+
+    /* Smooth button lifts */
+    .lift {
+      transition: transform 200ms ease, box-shadow 200ms ease, background-color 200ms ease, color 200ms ease;
+      will-change: transform;
+    }
+    .lift:hover { transform: translateY(-1px); }
+    .lift:active { transform: translateY(0); }
+
+    /* Modal animations */
+    .modal-overlay[aria-hidden="false"] { animation: fadeIn 180ms ease forwards; }
+    .modal-card.show { animation: scaleIn 200ms ease forwards; }
+
+    /* Toast styles */
+    .toast {
+      animation: fadeIn 180ms ease forwards;
+    }
+    .toast.hide {
+      animation: fadeOut 180ms ease forwards;
+    }
+
+    /* Prevent background scroll when modal is open */
+    body.modal-open {
+      overflow: hidden;
+      padding-right: var(--scrollbar-comp, 0px);
+    }
+
+    /* Elegant system font stack */
+    :root {
+      --bg-gradient-from: #eef2ff; /* indigo-50 */
+      --bg-gradient-to: #f0f9ff;   /* sky-50 */
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-b from-[var(--bg-gradient-from)] to-[var(--bg-gradient-to)] text-slate-900 antialiased selection:bg-indigo-200 selection:text-slate-900">
+  <!-- Page wrapper -->
+  <div class="flex min-h-screen flex-col">
+    <!-- Top Navigation -->
+    <header class="sticky top-0 z-30 backdrop-blur supports-[backdrop-filter]:bg-white/40 bg-white/60 border-b border-slate-200/60">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6">
+        <div class="flex h-16 items-center justify-between">
+          <!-- Brand -->
+          <div class="flex items-center gap-3">
+            <!-- Simple elegant note icon -->
+            <div class="h-8 w-8 rounded-xl bg-indigo-600 text-white grid place-items-center shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18V6l10-2v12"/>
+                <circle cx="7" cy="18" r="3"/>
+                <circle cx="17" cy="16" r="3"/>
+              </svg>
+            </div>
+            <span class="text-lg font-semibold tracking-tight">MelodyPlay</span>
+          </div>
+
+          <!-- Nav links -->
+          <nav aria-label="Primary" class="flex items-center gap-1">
+            <!-- Home (active) -->
+            <a href="#home" aria-current="page"
+               class="lift inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-slate-900 text-white shadow-sm hover:shadow transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+              Home
+            </a>
+            <!-- Leaderboard -->
+            <a href="#leaderboard"
+               class="lift inline-flex items-center rounded-full px-4 py-2 text-sm font-medium text-slate-700 hover:bg-white hover:shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+              Leaderboard
+            </a>
+            <!-- Play Together -->
+            <a href="#play-together"
+               class="lift inline-flex items-center rounded-full px-4 py-2 text-sm font-medium text-slate-700 hover:bg-white hover:shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+              Play Together
+            </a>
+            <!-- Settings -->
+            <a href="#settings"
+               class="lift inline-flex items-center rounded-full px-4 py-2 text-sm font-medium text-slate-700 hover:bg-white hover:shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+              Settings
+            </a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="home" class="flex-1">
+      <!-- Hero -->
+      <section class="mx-auto max-w-6xl px-4 sm:px-6 pt-14 pb-12 sm:pt-20 sm:pb-16">
+        <div class="grid place-items-center text-center gap-8">
+          <div class="space-y-4">
+            <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight text-slate-900">
+              MelodyPlay
+            </h1>
+            <p class="mx-auto max-w-2xl text-slate-600 text-base sm:text-lg">
+              Create, save, and compete with melodies — all in a clean, focused experience.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center justify-center gap-3">
+            <!-- Play Now -->
+            <button id="btnPlayNow" type="button"
+              class="lift inline-flex items-center gap-2 rounded-full bg-indigo-600 text-white px-6 py-3 text-base font-semibold shadow-sm hover:bg-indigo-700 hover:shadow-md active:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 -ml-1" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+              Play Now
+            </button>
+
+            <!-- How to Play (opens modal) -->
+            <button id="btnHowToPlay" type="button"
+              class="lift inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white text-slate-800 px-5 py-3 text-base font-medium hover:border-slate-400 hover:shadow-sm active:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 -ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 8v4"/>
+                <path d="M12 16h.01"/>
+                <circle cx="12" cy="12" r="10"/>
+              </svg>
+              How to Play
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Archive: My Melodies -->
+      <section class="mx-auto max-w-6xl px-4 sm:px-6 pb-16">
+        <div class="flex items-end justify-between gap-4 mb-5">
+          <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">My Melodies</h2>
+          <div class="text-xs sm:text-sm text-slate-500">
+            Note: This demo doesn’t play audio here.
+          </div>
+        </div>
+
+        <!-- Melody Grid -->
+        <div id="melodyGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Cards will be injected here -->
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-slate-200/60 bg-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/40">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6 py-6 text-center text-sm text-slate-600">
+        © 2025 MelodyPlay
+      </div>
+    </footer>
+  </div>
+
+  <!-- Modal: How to Play -->
+  <div id="howToPlayOverlay" class="modal-overlay fixed inset-0 z-40 hidden items-center justify-center bg-slate-900/50 p-4" aria-hidden="true">
+    <div role="dialog" aria-modal="true" aria-labelledby="howToPlayTitle" aria-describedby="howToPlayDesc"
+         class="modal-card relative w-full max-w-lg rounded-2xl bg-white shadow-xl ring-1 ring-slate-900/5 p-6 sm:p-7">
+      <!-- Close button -->
+      <button id="btnCloseModal" type="button"
+              class="lift absolute right-3.5 top-3.5 inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              aria-label="Close">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+
+      <div class="space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl bg-indigo-600 text-white grid place-items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 8v4"/>
+              <path d="M12 16h.01"/>
+              <circle cx="12" cy="12" r="10"/>
+            </svg>
+          </div>
+          <h3 id="howToPlayTitle" class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">How to Play</h3>
+        </div>
+
+        <div id="howToPlayDesc" class="space-y-3 text-slate-700 leading-relaxed">
+          <p>Compose short melodies by placing notes on a simple timeline grid. Each column is a beat, and each row is a pitch.</p>
+          <ul class="list-disc pl-5 space-y-2">
+            <li>Tap Play to hear your melody (audio disabled in this demo).</li>
+            <li>Save your favorite patterns to revisit later.</li>
+            <li>Compete on the Leaderboard by sharing your best scores.</li>
+            <li>Invite friends and Play Together for collaborative fun.</li>
+          </ul>
+          <p class="text-sm text-slate-500">Heads up: Audio playback isn’t available in this environment, so Play buttons will show a friendly message instead.</p>
+        </div>
+
+        <div class="pt-2">
+          <button type="button" id="btnGotIt"
+                  class="lift inline-flex items-center gap-2 rounded-full bg-slate-900 text-white px-5 py-2.5 text-sm font-semibold shadow-sm hover:bg-slate-800 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+            Got it
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastRegion" class="pointer-events-none fixed inset-x-0 bottom-4 z-50 grid place-items-center gap-2 px-4"></div>
+
+  <script>
+    /* =========================================
+       MelodyPlay Home — Production-ready JS
+       - Minimal, accessible, and responsive
+       - No audio playback (environment limitation)
+       ========================================= */
+
+    // Sample melody data (small set, placeholders)
+    const melodies = [
+      { id: 'm1', title: 'Morning Light', saved: false },
+      { id: 'm2', title: 'Echo Steps', saved: true },
+      { id: 'm3', title: 'Starlit Path', saved: false },
+    ];
+
+    // Cache DOM elements
+    const melodyGrid   = document.getElementById('melodyGrid');
+    const toastRegion  = document.getElementById('toastRegion');
+
+    // Modal controls
+    const overlay      = document.getElementById('howToPlayOverlay');
+    const btnHowToPlay = document.getElementById('btnHowToPlay');
+    const btnClose     = document.getElementById('btnCloseModal');
+    const btnGotIt     = document.getElementById('btnGotIt');
+
+    // Header nav interactions
+    const nav = document.querySelector('nav[aria-label="Primary"]');
+
+    // Play Now button
+    const btnPlayNow   = document.getElementById('btnPlayNow');
+
+    // Keep track of focus for modal
+    let lastFocusedElement = null;
+
+    /* ============ Utilities ============ */
+
+    // Show a simple toast (auto-dismiss)
+    function showToast(message, tone = 'default') {
+      const wrap = document.createElement('div');
+      wrap.className = 'toast pointer-events-auto w-full max-w-md rounded-xl bg-white shadow-lg ring-1 ring-slate-900/5 px-4 py-3 sm:px-4 sm:py-3';
+      wrap.setAttribute('role', 'status');
+      wrap.setAttribute('aria-live', 'polite');
+
+      // Tone styles
+      let iconBg = 'bg-slate-900';
+      if (tone === 'success') iconBg = 'bg-emerald-600';
+      if (tone === 'warning') iconBg = 'bg-amber-600';
+      if (tone === 'info')    iconBg = 'bg-indigo-600';
+
+      wrap.innerHTML = `
+        <div class="flex items-start gap-3">
+          <div class="mt-0.5 h-8 w-8 flex-shrink-0 rounded-lg ${iconBg} text-white grid place-items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              ${tone === 'success' ? '<path d="M20 6L9 17l-5-5"/>' :
+                tone === 'warning' ? '<path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>' :
+                tone === 'info' ? '<circle cx="12" cy="12" r="10"/><path d="M12 8v.01"/><path d="M11 12h1v5h1"/>' :
+                '<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>'}
+            </svg>
+          </div>
+          <div class="flex-1 text-sm text-slate-800">${message}</div>
+          <button type="button" aria-label="Close notification"
+            class="lift inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      `;
+
+      const closeBtn = wrap.querySelector('button');
+      let hideTimer = setTimeout(() => hide(), 2600);
+
+      function hide() {
+        wrap.classList.add('hide');
+        setTimeout(() => wrap.remove(), 180);
+      }
+
+      closeBtn.addEventListener('click', () => {
+        clearTimeout(hideTimer);
+        hide();
+      });
+
+      toastRegion.appendChild(wrap);
+    }
+
+    // Utility: get focusable elements inside a container
+    function getFocusable(container) {
+      return Array.from(container.querySelectorAll([
+        'a[href]',
+        'button:not([disabled])',
+        'textarea:not([disabled])',
+        'input:not([disabled])',
+        'select:not([disabled])',
+        '[tabindex]:not([tabindex="-1"])'
+      ].join(','))).filter(el => el.offsetParent !== null || el === document.activeElement);
+    }
+
+    // Measure scrollbar to avoid layout shift when locking body scroll
+    function adjustScrollbarComp(enable) {
+      if (enable) {
+        const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+        document.body.style.setProperty('--scrollbar-comp', scrollBarWidth + 'px');
+      } else {
+        document.body.style.removeProperty('--scrollbar-comp');
+      }
+    }
+
+    /* ============ Modal Controls ============ */
+
+    function openModal() {
+      lastFocusedElement = document.activeElement;
+      overlay.classList.remove('hidden');
+      overlay.setAttribute('aria-hidden', 'false');
+      adjustScrollbarComp(true);
+      document.body.classList.add('modal-open');
+
+      // Focus first focusable element in modal
+      const focusables = getFocusable(overlay);
+      if (focusables.length) {
+        focusables[0].focus();
+      }
+
+      // Trap focus within modal
+      overlay.addEventListener('keydown', trapFocus);
+      // Close by clicking backdrop
+      overlay.addEventListener('mousedown', backdropClose);
+      // Close on ESC
+      document.addEventListener('keydown', escToClose);
+      // Animate card
+      const card = overlay.querySelector('.modal-card');
+      card.classList.add('show');
+    }
+
+    function closeModal() {
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('modal-open');
+      adjustScrollbarComp(false);
+      // Slight delay for fade-out feel (since we use hide instantly for simplicity)
+      overlay.classList.add('hidden');
+
+      overlay.removeEventListener('keydown', trapFocus);
+      overlay.removeEventListener('mousedown', backdropClose);
+      document.removeEventListener('keydown', escToClose);
+
+      // Restore focus
+      if (lastFocusedElement) lastFocusedElement.focus();
+    }
+
+    function escToClose(e) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeModal();
+      }
+    }
+
+    function backdropClose(e) {
+      // If clicked directly on the overlay (not the dialog card), close
+      if (e.target === overlay) {
+        closeModal();
+      }
+    }
+
+    function trapFocus(e) {
+      if (e.key !== 'Tab') return;
+      const focusables = getFocusable(overlay);
+      if (!focusables.length) return;
+
+      const first = focusables[0];
+      const last  = focusables[focusables.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    /* ============ Archive Rendering ============ */
+
+    function renderMelodies() {
+      // Update only changed cards (simple selective update by id)
+      const existing = new Map(Array.from(melodyGrid.children).map(el => [el.dataset.id, el]));
+      const nextIds = new Set(melodies.map(m => m.id));
+
+      // Remove cards that no longer exist
+      existing.forEach((el, id) => {
+        if (!nextIds.has(id)) el.remove();
+      });
+
+      // Add/update current items
+      melodies.forEach(m => {
+        let card = existing.get(m.id);
+        const shareTitle = `${m.title} — MelodyPlay`;
+        if (!card) {
+          card = document.createElement('article');
+          card.dataset.id = m.id;
+          card.className = 'group rounded-2xl bg-white shadow-sm ring-1 ring-slate-900/5 hover:shadow-md transition p-4 sm:p-5';
+          card.innerHTML = `
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <h3 class="text-base sm:text-lg font-semibold text-slate-900 truncate"></h3>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1">Saved melody</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <!-- Play -->
+                <button type="button" class="btnPlay lift inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-white hover:bg-slate-800 hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500" aria-label="Play melody">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                </button>
+                <!-- Save -->
+                <button type="button" class="btnSave lift inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-700 hover:bg-slate-100 hover:shadow ring-1 ring-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500" aria-label="Save melody">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="iconSave h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                  </svg>
+                </button>
+                <!-- Share -->
+                <button type="button" class="btnShare lift inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-700 hover:bg-slate-100 hover:shadow ring-1 ring-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500" aria-label="Share melody">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7"/>
+                    <path d="M16 6l-4-4-4 4"/>
+                    <path d="M12 2v14"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <!-- Simple preview strip (visual only) -->
+            <div class="mt-4 grid grid-cols-12 gap-1.5">
+              ${Array.from({length: 12}).map((_, i) => `
+                <div class="h-2 rounded-full ${i % 3 === 0 ? 'bg-indigo-500/70' : 'bg-slate-200'}"></div>
+              `).join('')}
+            </div>
+          `;
+          melodyGrid.appendChild(card);
+
+          // Wire up events
+          card.querySelector('.btnPlay').addEventListener('click', () => {
+            // Audio not supported here
+            showToast('Playback isn’t available in this demo environment.', 'info');
+          });
+
+          card.querySelector('.btnSave').addEventListener('click', () => {
+            toggleSave(m.id);
+          });
+
+          card.querySelector('.btnShare').addEventListener('click', async () => {
+            const shareLink = `https://example.com/melody/${encodeURIComponent(m.id)}`;
+            try {
+              if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(shareLink);
+                showToast('Share link copied to clipboard.', 'success');
+              } else {
+                // Fallback: prompt
+                window.prompt('Copy this link:', shareLink);
+                showToast('Share link ready.', 'success');
+              }
+            } catch {
+              showToast('Could not copy link. Please try again.', 'warning');
+            }
+          });
+        }
+
+        // Update dynamic content (title and saved icon)
+        const titleEl = card.querySelector('h3');
+        if (titleEl.textContent !== m.title) {
+          titleEl.textContent = m.title;
+        }
+
+        const iconSave = card.querySelector('.iconSave');
+        if (m.saved) {
+          iconSave.setAttribute('fill', 'currentColor');
+          iconSave.setAttribute('stroke', 'none');
+          card.querySelector('.btnSave').setAttribute('aria-label', 'Unsave melody');
+        } else {
+          iconSave.setAttribute('fill', 'none');
+          iconSave.setAttribute('stroke', 'currentColor');
+          card.querySelector('.btnSave').setAttribute('aria-label', 'Save melody');
+        }
+      });
+    }
+
+    function toggleSave(id) {
+      const idx = melodies.findIndex(m => m.id === id);
+      if (idx >= 0) {
+        melodies[idx].saved = !melodies[idx].saved;
+        renderMelodies();
+        showToast(melodies[idx].saved ? 'Saved to your melodies.' : 'Removed from your melodies.', 'success');
+      }
+    }
+
+    /* ============ Nav Link Handling ============ */
+    // Keep the page within the same view; show friendly hints for non-Home links
+    nav.addEventListener('click', (e) => {
+      const link = e.target.closest('a[href]');
+      if (!link) return;
+      const label = link.textContent.trim();
+      // Always prevent default navigation to keep the iframe secure
+      e.preventDefault();
+      if (label === 'Home') {
+        showToast('You are already on Home.', 'info');
+        return;
+      }
+      showToast(`${label} coming soon.`, 'info');
+    });
+
+    /* ============ Primary Buttons ============ */
+
+    btnPlayNow.addEventListener('click', (e) => {
+      e.preventDefault();
+      // Friendly action for now
+      showToast('Starting a new game... (demo)', 'info');
+    });
+
+    btnHowToPlay.addEventListener('click', (e) => {
+      e.preventDefault();
+      openModal();
+    });
+
+    btnClose.addEventListener('click', (e) => {
+      e.preventDefault();
+      closeModal();
+    });
+
+    btnGotIt.addEventListener('click', (e) => {
+      e.preventDefault();
+      closeModal();
+      showToast('Have fun with MelodyPlay!', 'success');
+    });
+
+    /* ============ Init ============ */
+    renderMelodies();
+
+    // Accessibility: reduce motion preference could be handled here if needed
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9832d05f679c775c',t:'MTc1ODU1NDcxNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
