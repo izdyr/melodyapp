@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MelodyPlay — Home</title>
+  <meta name="description" content="MelodyPlay — a web-based music game. Clean, minimal, and responsive home page." />
+  <style>
+    /* =========
+       Design Tokens (Apple-like, minimal)
+       ========= */
+    :root{
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --text: #0b0b0f;
+      --muted: #5f6472;
+      --line: #e6e6eb;
+      --brand: #0a84ff;         /* iOS blue */
+      --brand-press: #0060df;
+      --ring: rgba(10,132,255,.35);
+      --shadow-soft: 0 1px 2px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.06);
+      --shadow-hover: 0 2px 6px rgba(0,0,0,.06), 0 12px 28px rgba(0,0,0,.10);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --radius-lg: 20px;
+      --trans: 180ms cubic-bezier(.2,.8,.2,1);
+    }
+
+    /* =========
+       Base & Layout
+       ========= */
+    html, body {
+      height: 100%;
+    }
+    body{
+      margin:0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1000px 500px at 90% -10%, #ffffff 0%, var(--bg) 60%) no-repeat,
+        linear-gradient(#ffffff, var(--bg)) no-repeat;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      line-height: 1.5;
+    }
+    .container{
+      width: min(1100px, 92%);
+      margin: 0 auto;
+    }
+
+    /* =========
+       Header / Navigation
+       ========= */
+    header{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: saturate(180%) blur(12px);
+      background: color-mix(in oklab, #ffffff 82%, transparent);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 14px 0;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight: 700;
+      letter-spacing:.2px;
+    }
+    .brand-badge{
+      width: 28px; height: 28px;
+      display:grid; place-items:center;
+      border-radius: 9px;
+      background: linear-gradient(140deg, var(--brand), #7cc2ff);
+      color:#fff;
+      box-shadow: var(--shadow-soft);
+      font-size: 16px;
+    }
+    .brand-name{
+      font-size: 18px;
+    }
+
+    .nav-links{
+      display:flex; align-items:center; gap: 6px;
+    }
+    .nav-link{
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      font: inherit;
+      letter-spacing:.2px;
+      transition: transform var(--trans), background var(--trans), color var(--trans);
+    }
+    .nav-link:hover{
+      background: #f1f2f6;
+      transform: translateY(-1px);
+    }
+    .nav-link:focus-visible{
+      outline: 0;
+      box-shadow: 0 0 0 4px var(--ring);
+    }
+    .nav-link.active{
+      background: var(--text);
+      color: #fff;
+    }
+
+    /* Mobile menu */
+    .menu-toggle{
+      display:none;
+      appearance:none;
+      border:0;
+      background: #f1f2f6;
+      padding:8px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: transform var(--trans), box-shadow var(--trans);
+    }
+    .menu-toggle:hover{ transform: translateY(-1px); box-shadow: var(--shadow-soft); }
+    .menu-toggle:focus-visible{ outline:0; box-shadow: 0 0 0 4px var(--ring); }
+
+    @media (max-width: 700px){
+      .menu-toggle{ display:block; }
+      .nav-links{
+        position: absolute;
+        right: 4%;
+        top: 62px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-soft);
+        padding: 8px;
+        display: none;
+        flex-direction: column;
+        width: 200px;
+      }
+      .nav-links.open{ display:flex; }
+      .nav-link{ width: 100%; text-align: left; }
+    }
+
+    /* =========
+       Hero
+       ========= */
+    .hero{
+      padding: clamp(48px, 8vw, 96px) 0 32px;
+      text-align: center;
+    }
+    .hero h1{
+      margin:0 0 14px;
+      font-size: clamp(34px, 6vw, 64px);
+      letter-spacing: -0.02em;
+      line-height: 1.04;
+      font-weight: 800;
+    }
+    .hero p{
+      margin:0 auto 26px;
+      color: var(--muted);
+      max-width: 680px;
+      font-size: clamp(15px, 1.9vw, 18px);
+    }
+    .actions{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn{
+      appearance: none;
+      border: 0;
+      font: inherit;
+      cursor: pointer;
+      padding: 14px 22px;
+      border-radius: 999px;
+      transition: transform var(--trans), box-shadow var(--trans), background var(--trans), color var(--trans), opacity var(--trans);
+      display:inline-flex; align-items:center; gap:10px;
+      white-space: nowrap;
+    }
+    .btn:focus-visible{ outline: 0; box-shadow: 0 0 0 6px var(--ring); }
+    .btn-primary{
+      background:  var(--brand);
+      color: #fff;
+      box-shadow: var(--shadow-soft);
+    }
+    .btn-primary:hover{ transform: translateY(-1px) scale(1.01); box-shadow: var(--shadow-hover); }
+    .btn-primary:active{ transform: translateY(0); background: var(--brand-press); }
+    .btn-secondary{
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+    .btn-secondary:hover{ background:#f1f2f6; transform: translateY(-1px); }
+    .btn-secondary:active{ transform: translateY(0); opacity:.95; }
+
+    /* =========
+       Archive: My Melodies
+       ========= */
+    .section{
+      padding: 24px 0 72px;
+    }
+    .section-head{
+      display:flex; align-items:baseline; justify-content:space-between;
+      gap: 12px; margin-bottom: 16px;
+    }
+    .section-head h2{
+      margin:0;
+      font-size: clamp(20px, 3vw, 28px);
+      letter-spacing:-.02em;
+    }
+    .muted{ color: var(--muted); }
+
+    .grid{
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+    }
+    .card{
+      grid-column: span 4;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-soft);
+      padding: 16px;
+      transition: transform var(--trans), box-shadow var(--trans);
+    }
+    .card:hover{ transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+    @media (max-width: 900px){ .card{ grid-column: span 6; } }
+    @media (max-width: 600px){ .card{ grid-column: span 12; } }
+
+    .card-title{
+      font-weight: 700; letter-spacing:.1px; margin:0 0 12px;
+    }
+    .controls{
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .circle{
+      width: 38px; height: 38px; border-radius: 999px;
+      display:grid; place-items:center;
+      border: 1px solid var(--line);
+      background:#fafafc;
+      transition: transform var(--trans), box-shadow var(--trans), background var(--trans), border-color var(--trans);
+      cursor: pointer;
+    }
+    .circle:hover{ transform: translateY(-1px); box-shadow: var(--shadow-soft); background:#f1f2f6; }
+    .circle:active{ transform: translateY(0); }
+    .circle:focus-visible{ outline:0; box-shadow: 0 0 0 4px var(--ring); }
+
+    .right-icons{
+      display:flex; align-items:center; gap: 8px;
+    }
+    .tiny{
+      font-size: 12px; color: var(--muted); margin-top: 10px;
+    }
+
+    /* =========
+       Modal (How to Play)
+       ========= */
+    .overlay{
+      position: fixed; inset: 0; z-index: 100;
+      display: none;
+      align-items: center; justify-content: center;
+      background: color-mix(in oklab, rgba(0,0,0,.35) 100%, transparent);
+      padding: 24px;
+    }
+    .overlay.open{ display:flex; }
+    .modal{
+      width: min(720px, 96vw);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-hover);
+      position: relative;
+      padding: clamp(18px, 3vw, 26px);
+    }
+    .modal h3{
+      margin: 8px 0 8px;
+      font-size: clamp(20px, 3vw, 26px);
+    }
+    .modal p{ color: var(--muted); margin: 0 0 12px; }
+    .modal ul{
+      margin: 10px 0 0 18px;
+      color: var(--text);
+    }
+    .close-x{
+      position: absolute; top: 10px; right: 10px;
+      width: 36px; height:36px; border-radius: 999px;
+      border: 1px solid var(--line);
+      background:#fafafc;
+      display:grid; place-items:center; cursor:pointer;
+      transition: transform var(--trans), box-shadow var(--trans), background var(--trans);
+    }
+    .close-x:hover{ transform: translateY(-1px); box-shadow: var(--shadow-soft); background:#f1f2f6; }
+    .close-x:focus-visible{ outline:0; box-shadow: 0 0 0 4px var(--ring); }
+
+    /* =========
+       Footer
+       ========= */
+    footer{
+      border-top: 1px solid var(--line);
+      padding: 24px 0 40px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* =========
+       Toast
+       ========= */
+    .toast{
+      position: fixed;
+      left: 50%; bottom: 22px; transform: translateX(-50%) translateY(20px);
+      background: #111214;
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 999px;
+      box-shadow: var(--shadow-hover);
+      opacity: 0;
+      transition: opacity var(--trans), transform var(--trans);
+      z-index: 200;
+      pointer-events: none;
+      font-size: 14px;
+      letter-spacing:.2px;
+      white-space: nowrap;
+      max-width: calc(100vw - 40px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .toast.show{
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Utility icons */
+    .icon{ width: 18px; height: 18px; display:block; }
+    .icon-lg{ width: 20px; height: 20px; }
+    .icon-muted{ stroke:#394150; }
+    .icon-solid{ fill:#111; }
+  </style>
+</head>
+<body>
+  <!-- Header / Nav -->
+  <header>
+    <div class="container nav" aria-label="Primary">
+      <div class="brand">
+        <div class="brand-badge" aria-hidden="true">♪</div>
+        <div class="brand-name">MelodyPlay</div>
+      </div>
+
+      <button class="menu-toggle" id="menuToggle" aria-expanded="false" aria-controls="navMenu">
+        Menu
+      </button>
+
+      <nav class="nav-links" id="navMenu">
+        <!-- Using buttons to avoid unwanted navigation inside sandbox -->
+        <button class="nav-link active" type="button" data-nav="home" aria-current="page">Home</button>
+        <button class="nav-link" type="button" data-nav="leaderboard">Leaderboard</button>
+        <button class="nav-link" type="button" data-nav="together">Play Together</button>
+        <button class="nav-link" type="button" data-nav="settings">Settings</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <main>
+    <section class="hero container">
+      <h1>MelodyPlay</h1>
+      <p>Train your musical memory, match notes, and climb the charts. Simple. Elegant. Addictively fun.</p>
+      <div class="actions">
+        <button type="button" class="btn btn-primary" id="playNowBtn">
+          <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M8 5v14l11-7-11-7Z" fill="currentColor"></path>
+          </svg>
+          Play Now
+        </button>
+
+        <button type="button" class="btn btn-secondary" id="howToBtn" aria-haspopup="dialog" aria-controls="howToDialog">
+          How to Play
+        </button>
+      </div>
+    </section>
+
+    <!-- Archive / My Melodies -->
+    <section class="section container" id="archive">
+      <div class="section-head">
+        <h2>My Melodies</h2>
+        <span class="muted" aria-live="polite">Saved: <span id="savedCount">0</span></span>
+      </div>
+
+      <div class="grid" id="melodyGrid" aria-live="polite">
+        <!-- Melody cards (placeholders) -->
+        <!-- Card 1 -->
+        <article class="card" data-id="sunrise-loop">
+          <h3 class="card-title">Sunrise Loop</h3>
+          <div class="controls">
+            <button type="button" class="circle play-btn" aria-label="Play Sunrise Loop">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M8 5v14l11-7-11-7Z" fill="currentColor"></path>
+              </svg>
+            </button>
+
+            <div class="right-icons">
+              <button type="button" class="circle save-btn" aria-label="Save Sunrise Loop" aria-pressed="false" title="Save">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M6 3h12a1 1 0 0 1 1 1v16l-7-4-7 4V4a1 1 0 0 1 1-1Z" stroke="#2b2f36" stroke-width="1.8" fill="none"/>
+                </svg>
+              </button>
+              <button type="button" class="circle share-btn" aria-label="Share Sunrise Loop" title="Share">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 3v13" stroke="#2b2f36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="tiny">Last played • never</div>
+        </article>
+
+        <!-- Card 2 -->
+        <article class="card" data-id="night-jam">
+          <h3 class="card-title">Night Jam</h3>
+          <div class="controls">
+            <button type="button" class="circle play-btn" aria-label="Play Night Jam">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M8 5v14l11-7-11-7Z" fill="currentColor"></path>
+              </svg>
+            </button>
+
+            <div class="right-icons">
+              <button type="button" class="circle save-btn" aria-label="Save Night Jam" aria-pressed="false" title="Save">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M6 3h12a1 1 0 0 1 1 1v16l-7-4-7 4V4a1 1 0 0 1 1-1Z" stroke="#2b2f36" stroke-width="1.8" fill="none"/>
+                </svg>
+              </button>
+              <button type="button" class="circle share-btn" aria-label="Share Night Jam" title="Share">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 3v13" stroke="#2b2f36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="tiny">Last played • never</div>
+        </article>
+
+        <!-- Card 3 -->
+        <article class="card" data-id="lofi-drift">
+          <h3 class="card-title">Lo‑Fi Drift</h3>
+          <div class="controls">
+            <button type="button" class="circle play-btn" aria-label="Play Lo‑Fi Drift">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M8 5v14l11-7-11-7Z" fill="currentColor"></path>
+              </svg>
+            </button>
+
+            <div class="right-icons">
+              <button type="button" class="circle save-btn" aria-label="Save Lo‑Fi Drift" aria-pressed="false" title="Save">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M6 3h12a1 1 0 0 1 1 1v16l-7-4-7 4V4a1 1 0 0 1 1-1Z" stroke="#2b2f36" stroke-width="1.8" fill="none"/>
+                </svg>
+              </button>
+              <button type="button" class="circle share-btn" aria-label="Share Lo‑Fi Drift" title="Share">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 3v13" stroke="#2b2f36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="tiny">Last played • never</div>
+        </article>
+
+        <!-- Card 4 -->
+        <article class="card" data-id="echo-steps">
+          <h3 class="card-title">Echo Steps</h3>
+          <div class="controls">
+            <button type="button" class="circle play-btn" aria-label="Play Echo Steps">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M8 5v14l11-7-11-7Z" fill="currentColor"></path>
+              </svg>
+            </button>
+
+            <div class="right-icons">
+              <button type="button" class="circle save-btn" aria-label="Save Echo Steps" aria-pressed="false" title="Save">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M6 3h12a1 1 0 0 1 1 1v16l-7-4-7 4V4a1 1 0 0 1 1-1Z" stroke="#2b2f36" stroke-width="1.8" fill="none"/>
+                </svg>
+              </button>
+              <button type="button" class="circle share-btn" aria-label="Share Echo Steps" title="Share">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 3v13" stroke="#2b2f36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="tiny">Last played • never</div>
+        </article>
+
+        <!-- Card 5 -->
+        <article class="card" data-id="pixel-bounce">
+          <h3 class="card-title">Pixel Bounce</h3>
+          <div class="controls">
+            <button type="button" class="circle play-btn" aria-label="Play Pixel Bounce">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M8 5v14l11-7-11-7Z" fill="currentColor"></path>
+              </svg>
+            </button>
+
+            <div class="right-icons">
+              <button type="button" class="circle save-btn" aria-label="Save Pixel Bounce" aria-pressed="false" title="Save">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M6 3h12a1 1 0 0 1 1 1v16l-7-4-7 4V4a1 1 0 0 1 1-1Z" stroke="#2b2f36" stroke-width="1.8" fill="none"/>
+                </svg>
+              </button>
+              <button type="button" class="circle share-btn" aria-label="Share Pixel Bounce" title="Share">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 3v13" stroke="#2b2f36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="tiny">Last played • never</div>
+        </article>
+
+        <!-- Card 6 -->
+        <article class="card" data-id="glass-chime">
+          <h3 class="card-title">Glass Chime</h3>
+          <div class="controls">
+            <button type="button" class="circle play-btn" aria-label="Play Glass Chime">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M8 5v14l11-7-11-7Z" fill="currentColor"></path>
+              </svg>
+            </button>
+
+            <div class="right-icons">
+              <button type="button" class="circle save-btn" aria-label="Save Glass Chime" aria-pressed="false" title="Save">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M6 3h12a1 1 0 0 1 1 1v16l-7-4-7 4V4a1 1 0 0 1 1-1Z" stroke="#2b2f36" stroke-width="1.8" fill="none"/>
+                </svg>
+              </button>
+              <button type="button" class="circle share-btn" aria-label="Share Glass Chime" title="Share">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 3v13" stroke="#2b2f36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="tiny">Last played • never</div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    © 2025 MelodyPlay
+  </footer>
+
+  <!-- Modal: How to Play -->
+  <div class="overlay" id="howToDialog" role="dialog" aria-modal="true" aria-labelledby="howToTitle" aria-hidden="true">
+    <div class="modal">
+      <button class="close-x" type="button" id="closeHowTo" aria-label="Close">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 6l12 12M18 6 6 18" stroke="#2b2f36" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <h3 id="howToTitle">How to Play</h3>
+      <p>Get the basics in under a minute.</p>
+      <ul>
+        <li>Tap Play Now to start a quick round.</li>
+        <li>Listen to the melody pattern and repeat it in order.</li>
+        <li>Each successful round adds one more note to the sequence.</li>
+        <li>Combo streaks boost your score. Miss a note and the round ends.</li>
+        <li>Save your favorite creations and share them with friends.</li>
+      </ul>
+      <p class="muted" style="margin-top:12px;">Tip: Use headphones for the best experience.</p>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // Utility: Toast messages
+    (function(){
+      const toast = document.getElementById('toast');
+      let hideTimer;
+      window.showToast = function(msg){
+        if(!toast) return;
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(()=> toast.classList.remove('show'), 2200);
+      }
+    })();
+
+    // State
+    const savedMap = new Map(); // id -> boolean
+
+    // Modal controls (open/close)
+    (function(){
+      const opener = document.getElementById('howToBtn');
+      const overlay = document.getElementById('howToDialog');
+      const closer = document.getElementById('closeHowTo');
+      let prevFocus = null;
+
+      const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+      function openModal(){
+        prevFocus = document.activeElement;
+        overlay.classList.add('open');
+        overlay.setAttribute('aria-hidden', 'false');
+
+        // Focus first focusable element inside modal
+        const first = overlay.querySelector(focusableSelectors);
+        if(first) first.focus();
+
+        // Lock scroll (simple)
+        document.body.style.overflow = 'hidden';
+      }
+      function closeModal(){
+        overlay.classList.remove('open');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        if(prevFocus) prevFocus.focus();
+      }
+
+      function onOverlayClick(e){
+        if(e.target === overlay) closeModal();
+      }
+
+      function onKey(e){
+        if(e.key === 'Escape') closeModal();
+        if(e.key === 'Tab'){
+          // Basic focus trap
+          const nodes = overlay.querySelectorAll(focusableSelectors);
+          if(!nodes.length) return;
+          const first = nodes[0];
+          const last = nodes[nodes.length - 1];
+          if(e.shiftKey && document.activeElement === first){
+            last.focus(); e.preventDefault();
+          } else if(!e.shiftKey && document.activeElement === last){
+            first.focus(); e.preventDefault();
+          }
+        }
+      }
+
+      opener.addEventListener('click', openModal);
+      closer.addEventListener('click', closeModal);
+      overlay.addEventListener('click', onOverlayClick);
+      document.addEventListener('keydown', onKey);
+    })();
+
+    // Navigation behavior (non-navigating; shows "coming soon" for non-Home)
+    (function(){
+      const nav = document.getElementById('navMenu');
+      const toggle = document.getElementById('menuToggle');
+
+      toggle.addEventListener('click', () => {
+        const open = nav.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', String(open));
+      });
+
+      nav.addEventListener('click', (e)=>{
+        const btn = e.target.closest('.nav-link');
+        if(!btn) return;
+
+        const where = btn.getAttribute('data-nav');
+        if(where === 'home'){
+          // Keep Home active, scroll to top
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          showToast('Coming soon ✨');
+        }
+
+        // Keep Home highlighted as requested
+        nav.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+        nav.querySelector('[data-nav="home"]').classList.add('active');
+
+        // Close mobile menu after a choice
+        if(nav.classList.contains('open')){
+          nav.classList.remove('open');
+          toggle.setAttribute('aria-expanded', 'false');
+        }
+      });
+    })();
+
+    // "Play Now" scrolls to Archive for now
+    document.getElementById('playNowBtn').addEventListener('click', ()=>{
+      const target = document.getElementById('archive');
+
+    });
+
+    // Melody card interactions
+    (function(){
+      const grid = document.getElementById('melodyGrid');
+      const savedCountEl = document.getElementById('savedCount');
+
+      function updateSavedCount(){
+        let count = 0;
+        savedMap.forEach(v => { if(v) count++; });
+        savedCountEl.textContent = String(count);
+      }
+
+      function setSavedVisual(button, isSaved){
+        // Toggle aria and icon color
+        button.setAttribute('aria-pressed', String(isSaved));
+        const svg = button.querySelector('svg path');
+        if(svg){
+          if(isSaved){
+            svg.setAttribute('stroke', 'none');
+            svg.setAttribute('fill', 'url(#grad-'+Math.random().toString(36).slice(2,6)+')');
+            // Simple brand fill: fallback if gradient not supported
+            svg.setAttribute('fill', '#0a84ff');
+          }else{
+            svg.setAttribute('fill', 'none');
+            svg.setAttribute('stroke', '#2b2f36');
+          }
+        }
+      }
+
+      grid.addEventListener('click', async (e)=>{
+        const card = e.target.closest('.card');
+        if(!card) return;
+        const id = card.getAttribute('data-id');
+
+        // Play action (placeholder)
+        const playBtn = e.target.closest('.play-btn');
+        if(playBtn){
+          // Placeholder only (no audio per platform limitation)
+          const title = card.querySelector('.card-title')?.textContent?.trim() || 'Melody';
+          showToast(`Playing “${title}” (demo)`);
+          return;
+        }
+
+        // Save action (local toggle)
+        const saveBtn = e.target.closest('.save-btn');
+        if(saveBtn){
+          const next = !savedMap.get(id);
+          savedMap.set(id, next);
+          setSavedVisual(saveBtn, next);
+          updateSavedCount();
+          showToast(next ? 'Saved to My Melodies ✓' : 'Removed from saves');
+          return;
+        }
+
+        // Share action (copy a fake link)
+        const shareBtn = e.target.closest('.share-btn');
+        if(shareBtn){
+          const link = `https://melody.play/melody/${encodeURIComponent(id)}`;
+          try{
+            await navigator.clipboard.writeText(link);
+            showToast('Link copied to clipboard');
+          }catch{
+            // Fallback: show link in toast
+            showToast('Copy this link: ' + link);
+          }
+          return;
+        }
+      });
+    })();
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98426160e602d2b6',t:'MTc1ODcxNzk0Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
